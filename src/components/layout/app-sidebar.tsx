@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { LayoutDashboard, FileText, CreditCard, Settings, LogOut, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { supabase } from '@/lib/supabaseClient'
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -17,6 +18,30 @@ const navigation = [
 export function AppSidebar() {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [userName, setUserName] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: memberData, error } = await supabase.from('members').select('full_name,email').eq('user_id', user.id).single()
+      if (error || !memberData) {
+        console.error('Failed to fetch member data:', error)
+        return
+      }
+      setUserName(memberData.full_name)
+      setUserEmail(memberData.email)
+    }
+
+    fetchUser()
+  }, [])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/sign-in'
+  }
 
   return (
     <>
@@ -45,7 +70,7 @@ export function AppSidebar() {
             <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
               <FileText className="w-5 h-5 text-sidebar-primary-foreground" />
             </div>
-            <span className="text-lg font-semibold text-sidebar-foreground">NotesApp</span>
+            <span className="text-lg font-semibold text-sidebar-foreground">Notely</span>
           </div>
 
           {/* Navigation */}
@@ -75,17 +100,17 @@ export function AppSidebar() {
           <div className="p-4 border-t border-sidebar-border">
             <div className="flex items-center gap-3 px-3 py-2 mb-2">
               <div className="w-8 h-8 rounded-full bg-sidebar-primary flex items-center justify-center">
-                <span className="text-sm font-medium text-sidebar-primary-foreground">JD</span>
+                <span className="text-sm font-medium text-sidebar-primary-foreground">{userName?.charAt(0) || 'U'}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">John Doe</p>
-                <p className="text-xs text-muted-foreground truncate">john@example.com</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{userName}</p>
+                <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
               </div>
             </div>
             <Button
               variant="ghost"
               className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              onClick={() => (window.location.href = "/sign-in")}
+              onClick={handleSignOut}
             >
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
