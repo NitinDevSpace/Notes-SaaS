@@ -1,40 +1,33 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Download, CheckCircle } from "lucide-react"
+import { Download, CheckCircle, FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
-const invoices = [
-  {
-    id: "INV-2024-001",
-    date: "Dec 15, 2024",
-    amount: "$29.00",
-    status: "Paid",
-    description: "Pro Plan - Monthly",
-  },
-  {
-    id: "INV-2024-002",
-    date: "Nov 15, 2024",
-    amount: "$29.00",
-    status: "Paid",
-    description: "Pro Plan - Monthly",
-  },
-  {
-    id: "INV-2024-003",
-    date: "Oct 15, 2024",
-    amount: "$29.00",
-    status: "Paid",
-    description: "Pro Plan - Monthly",
-  },
-  {
-    id: "INV-2024-004",
-    date: "Sep 15, 2024",
-    amount: "$29.00",
-    status: "Paid",
-    description: "Pro Plan - Monthly",
-  },
-]
+interface BillingItem {
+  id: string
+  date: string
+  description: string
+  amount: string
+  status: string
+}
 
-export function BillingHistory() {
+interface BillingHistoryProps {
+  billingData: BillingItem[]
+}
+
+export function BillingHistory({ billingData }: BillingHistoryProps) {
+  if (billingData.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <FileText className="w-12 h-12 text-muted-foreground mb-4" />
+          <p className="text-lg font-medium mb-1">No billing history found</p>
+          <p className="text-sm text-muted-foreground">Once you have payments, they will appear here.</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardContent className="p-0">
@@ -51,7 +44,7 @@ export function BillingHistory() {
               </tr>
             </thead>
             <tbody>
-              {invoices.map((invoice) => (
+              {billingData.map((invoice) => (
                 <tr key={invoice.id} className="border-b border-border last:border-0 hover:bg-muted/50">
                   <td className="p-4">
                     <span className="font-mono text-sm">{invoice.id}</span>

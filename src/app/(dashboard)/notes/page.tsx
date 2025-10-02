@@ -1,13 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Search, MoreVertical, Edit, Trash2, Star, FileText } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { NoteModal } from "@/components/notes/note-modal"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from "react"
+import { supabase } from '@/lib/supabaseClient'
+import useUser from '@/hooks/useUser'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { NoteModal } from '@/components/notes/note-modal'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Badge } from '@/components/ui/badge'
+import { Plus, Search, MoreVertical, Edit, Trash2, Star, FileText } from 'lucide-react'
 
 type Note = {
   id: number
@@ -19,82 +21,62 @@ type Note = {
   isFavorite: boolean
 }
 
-const initialNotes: Note[] = [
-  {
-    id: 1,
-    title: "Q4 Planning Meeting Notes",
-    content: "Discussed goals and objectives for Q4...",
-    category: "Meetings",
-    lastEdited: "2 hours ago",
-    author: "John Doe",
-    isFavorite: true,
-  },
-  {
-    id: 2,
-    title: "Product Roadmap Ideas",
-    content: "New features to consider for next release...",
-    category: "Product",
-    lastEdited: "5 hours ago",
-    author: "Jane Smith",
-    isFavorite: false,
-  },
-  {
-    id: 3,
-    title: "Customer Feedback Summary",
-    content: "Key insights from customer interviews...",
-    category: "Research",
-    lastEdited: "1 day ago",
-    author: "Mike Johnson",
-    isFavorite: true,
-  },
-  {
-    id: 4,
-    title: "Sprint Retrospective",
-    content: "What went well and what to improve...",
-    category: "Meetings",
-    lastEdited: "2 days ago",
-    author: "Sarah Williams",
-    isFavorite: false,
-  },
-  {
-    id: 5,
-    title: "Marketing Campaign Ideas",
-    content: "Brainstorming session for Q1 campaigns...",
-    category: "Marketing",
-    lastEdited: "3 days ago",
-    author: "John Doe",
-    isFavorite: false,
-  },
-  {
-    id: 6,
-    title: "Technical Architecture Review",
-    content: "System design and scalability considerations...",
-    category: "Engineering",
-    lastEdited: "4 days ago",
-    author: "Alex Chen",
-    isFavorite: true,
-  },
-]
-
 export default function NotesPage() {
-  const [notes, setNotes] = useState<Note[]>(initialNotes)
-  const [searchQuery, setSearchQuery] = useState("")
+  const { user, isLoading: userLoading } = useUser()
+  const [notes, setNotes] = useState<Note[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const filteredNotes = notes.filter(
-    (note) =>
-      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.category.toLowerCase().includes(searchQuery.toLowerCase()),
+  useEffect(() => {
+    if (!user) return
+
+    const fetchNotes = async () => {
+      setLoading(true)
+      try {
+        // Get user's org_id
+        const { data: memberData, error: memberError } = await supabase.from('members').select('org_id').eq('user_id', user.id).single()
+        if (memberError || !memberData) throw memberError || new Error('No organization found')
+        const orgId = memberData.org_id
+
+        // Fetch notes for this org
+        const { data: notesData, error: notesError } = await supabase.from('notes').select('*').eq('org_id', orgId).order('created_at', { ascending: false })
+        if (notesError) throw notesError
+
+        const formattedNotes: Note[] = notesData.map((note: any) => ({
+          id: note.id,
+          title: note.title,
+          content: note.content,
+          category: note.category,
+          lastEdited: new Date(note.created_at).toLocaleString(),
+          author: note.created_by || 'Unknown',
+          isFavorite: note.is_favorite || false,
+        }))
+
+        setNotes(formattedNotes)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNotes()
+  }, [user])
+
+  const filteredNotes = notes.filter(note =>
+    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    note.category.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const handleCreateNote = (noteData: { title: string; content: string; category: string }) => {
     const newNote: Note = {
-      id: Math.max(...notes.map((n) => n.id)) + 1,
+      id: Math.max(...notes.map(n => n.id), 0) + 1,
       ...noteData,
-      lastEdited: "Just now",
-      author: "John Doe",
+      lastEdited: 'Just now',
+      author: user?.email || 'Unknown',
       isFavorite: false,
     }
     setNotes([newNote, ...notes])
@@ -103,20 +85,18 @@ export default function NotesPage() {
 
   const handleEditNote = (noteData: { title: string; content: string; category: string }) => {
     if (editingNote) {
-      setNotes(
-        notes.map((note) => (note.id === editingNote.id ? { ...note, ...noteData, lastEdited: "Just now" } : note)),
-      )
+      setNotes(notes.map(note => note.id === editingNote.id ? { ...note, ...noteData, lastEdited: 'Just now' } : note))
       setEditingNote(null)
       setIsModalOpen(false)
     }
   }
 
   const handleDeleteNote = (id: number) => {
-    setNotes(notes.filter((note) => note.id !== id))
+    setNotes(notes.filter(note => note.id !== id))
   }
 
   const handleToggleFavorite = (id: number) => {
-    setNotes(notes.map((note) => (note.id === id ? { ...note, isFavorite: !note.isFavorite } : note)))
+    setNotes(notes.map(note => note.id === id ? { ...note, isFavorite: !note.isFavorite } : note))
   }
 
   const openEditModal = (note: Note) => {
@@ -127,6 +107,10 @@ export default function NotesPage() {
   const closeModal = () => {
     setIsModalOpen(false)
     setEditingNote(null)
+  }
+
+  if (userLoading || loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
 
   return (
@@ -157,23 +141,23 @@ export default function NotesPage() {
 
       {/* Notes Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredNotes.map((note) => (
+        {filteredNotes.map(note => (
           <Card key={note.id} className="group hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg truncate">{note.title}</CardTitle>
-                  <CardDescription className="mt-1">
-                    <Badge variant="secondary" className="text-xs">
-                      {note.category}
-                    </Badge>
-                  </CardDescription>
+                <div className="flex-1 min-w-0 flex items-center justify-between">
+                  <div className="truncate">
+                    <CardTitle className="text-lg truncate w-full">{note.title}</CardTitle>
+                    <CardDescription className="mt-1">
+                      <Badge variant="secondary" className="text-xs">
+                        {note.category}
+                      </Badge>
+                    </CardDescription>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleFavorite(note.id)}>
-                    <Star
-                      className={`w-4 h-4 ${note.isFavorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
-                    />
+                    <Star className={`w-4 h-4 ${note.isFavorite ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
