@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import { useRouter } from 'next/navigation'
 import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export function SignInForm() {
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -27,7 +29,7 @@ export function SignInForm() {
         alert(error.message)
       } else {
         console.log("User signed in:", data.user)
-        // Redirect handled by parent page if needed
+        router.push('/dashboard') // Redirect to dashboard on success
       }
     } catch (err) {
       console.error("Sign in error:", err)
