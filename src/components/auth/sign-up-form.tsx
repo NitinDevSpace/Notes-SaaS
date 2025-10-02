@@ -66,6 +66,8 @@ export function SignUpForm() {
 				user_id: userId,
 				org_id: orgData.id,
 				role: "admin",
+				full_name: name, // store full name
+				email: email.trim().toLowerCase(), // store email
 			});
 
 			if (memberError) {

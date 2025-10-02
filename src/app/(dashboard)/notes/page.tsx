@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { NoteModal } from '@/components/notes/note-modal'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Search, MoreVertical, Edit, Trash2, Star, FileText } from 'lucide-react'
+import { Plus, Search, MoreVertical, Edit, Trash2, Star, FileText, Loader } from 'lucide-react'
 
 type Note = {
   id: number
@@ -110,7 +110,7 @@ export default function NotesPage() {
   }
 
   if (userLoading || loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+    return <div className="min-h-screen flex items-center justify-center"><Loader />{" "} Loading...</div>
   }
 
   return (

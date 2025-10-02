@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import useUser from "@/hooks/useUser";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout({
 	children,
@@ -24,7 +25,7 @@ export default function DashboardLayout({
 	if (isLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
-				Loading...
+				<Loader2 />{" "}	Loading...
 			</div>
 		);
 	}

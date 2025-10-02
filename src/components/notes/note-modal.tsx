@@ -1,8 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
+import { supabase } from '@/lib/supabaseClient'
+import useUser from '@/hooks/useUser'
 import {
   Dialog,
   DialogContent,
@@ -31,9 +32,11 @@ type NoteModalProps = {
 const categories = ["Meetings", "Product", "Research", "Marketing", "Engineering", "General"]
 
 export function NoteModal({ isOpen, onClose, onSave, initialData }: NoteModalProps) {
+  const { user } = useUser()
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [category, setCategory] = useState("General")
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (initialData) {
@@ -47,9 +50,37 @@ export function NoteModal({ isOpen, onClose, onSave, initialData }: NoteModalPro
     }
   }, [initialData, isOpen])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSave({ title, content, category })
+    if (!user) return
+
+    setLoading(true)
+
+    try {
+      // Get user's org_id
+      const { data: memberData } = await supabase.from('members').select('org_id').eq('user_id', user.id).single()
+      const orgId = memberData?.org_id
+      if (!orgId) throw new Error('Organization not found')
+
+      // Insert note into DB
+      const { error } = await supabase.from('notes').insert({
+        org_id: orgId,
+        title,
+        content,
+        category,
+        created_by: user.email
+      })
+
+      if (error) throw error
+
+      onSave({ title, content, category })
+      onClose()
+    } catch (err: any) {
+      console.error(err)
+      alert('Failed to create note: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -101,10 +132,10 @@ export function NoteModal({ isOpen, onClose, onSave, initialData }: NoteModalPro
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit">{initialData ? "Save Changes" : "Create Note"}</Button>
+            <Button type="submit" disabled={loading}>{initialData ? "Save Changes" : "Create Note"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
