@@ -1,36 +1,165 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NotesApp - Multi-Tenant SaaS Notes Platform
+
+A modern, full-featured SaaS application for team note management built with Next.js 14, TypeScript, and Tailwind CSS.
+
+## Features
+
+### Authentication
+- Sign up with organization creation
+- Sign in with email/password
+- Password recovery flow
+- Multi-tenant architecture
+
+### Dashboard
+- Overview statistics (notes, team members, projects)
+- Recent activity feed
+- Quick action shortcuts
+- Responsive design
+
+### Notes Management
+- Create, edit, and delete notes
+- Category organization
+- Search and filter functionality
+- Favorite notes
+- Rich text content
+- Real-time collaboration ready
+
+### Billing & Subscriptions
+- Multiple pricing tiers (Free, Pro, Enterprise)
+- Subscription management
+- Payment method updates
+- Billing history with downloadable invoices
+- Usage tracking
+
+### Settings & Team Management
+- Organization profile management
+- Team member invitations
+- Role-based access control (Owner, Admin, Member)
+- User preferences
+- Notification settings
+- Theme customization
+
+## Tech Stack
+
+- **Framework:** Next.js 14 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS v4
+- **UI Components:** Radix UI + shadcn/ui
+- **Icons:** Lucide React
+- **Fonts:** Geist Sans & Geist Mono
+
+## Project Structure
+
+\`\`\`
+├── app/
+│   ├── (auth)/
+│   │   ├── sign-in/
+│   │   └── sign-up/
+│   ├── (dashboard)/
+│   │   ├── dashboard/
+│   │   ├── notes/
+│   │   ├── billing/
+│   │   └── settings/
+│   ├── layout.tsx
+│   └── globals.css
+├── components/
+│   ├── auth/
+│   ├── billing/
+│   ├── layout/
+│   ├── notes/
+│   ├── settings/
+│   └── ui/
+├── lib/
+│   └── utils.ts
+├── types/
+│   └── index.ts
+└── hooks/
+\`\`\`
 
 ## Getting Started
 
-First, run the development server:
+### Installation
 
-```bash
+\`\`\`bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+\`\`\`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+\`\`\`bash
+npm run build
+npm start
+\`\`\`
 
-## Learn More
+## Key Components
 
-To learn more about Next.js, take a look at the following resources:
+### Layout Components
+- `AppSidebar` - Responsive sidebar navigation with mobile menu
+- `AppHeader` - Top header with search and notifications
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Feature Components
+- `SignInForm` / `SignUpForm` - Authentication forms
+- `NoteModal` - Create/edit note dialog
+- `PricingPlans` - Subscription plan cards
+- `TeamMembers` - Team management interface
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### UI Components
+All UI components are built with Radix UI primitives and styled with Tailwind CSS:
+- Button, Card, Input, Label
+- Dialog, DropdownMenu, Select
+- Badge, Avatar, Tabs
+- And more...
 
-## Deploy on Vercel
+## Customization
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Theme
+Edit `app/globals.css` to customize the color scheme. The app uses CSS variables for theming with support for light and dark modes.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Branding
+- Update the logo in `components/layout/app-sidebar.tsx`
+- Modify organization name and metadata in `app/layout.tsx`
+
+## Database Integration
+
+This project is ready for database integration. Add your preferred database:
+- Supabase (recommended for auth + database)
+- Neon (PostgreSQL)
+- PlanetScale (MySQL)
+
+Update the mock data in pages with real API calls to your backend.
+
+## Deployment
+
+Deploy to Vercel with one click:
+
+\`\`\`bash
+vercel deploy
+\`\`\`
+
+Or use the Vercel dashboard to connect your GitHub repository.
+
+## Environment Variables
+
+Create a `.env.local` file:
+
+\`\`\`env
+# Database
+DATABASE_URL=your_database_url
+
+# Authentication (if using external provider)
+AUTH_SECRET=your_auth_secret
+
+# Stripe (for payments)
+STRIPE_SECRET_KEY=your_stripe_secret
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+\`\`\`
+
+## License
+
+MIT License - feel free to use this project for your own SaaS applications.
