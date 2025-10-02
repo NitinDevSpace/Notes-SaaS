@@ -40,19 +40,40 @@ export default function NotesPage() {
         if (memberError || !memberData) throw memberError || new Error('No organization found')
         const orgId = memberData.org_id
 
-        // Fetch notes for this org
-        const { data: notesData, error: notesError } = await supabase.from('notes').select('*').eq('org_id', orgId).order('created_at', { ascending: false })
+        // Fetch notes for this org with member's full_name and category name
+        const { data: notesData, error: notesError } = await supabase
+          .from('notes')
+          .select('*, members:created_by (full_name), note_categories:category_id (name)')
+          .eq('org_id', orgId)
+          .order('created_at', { ascending: false })
         if (notesError) throw notesError
 
-        const formattedNotes: Note[] = notesData.map((note: any) => ({
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          category: note.category,
-          lastEdited: new Date(note.created_at).toLocaleString(),
-          author: note.created_by || 'Unknown',
-          isFavorite: note.is_favorite || false,
-        }))
+        const formattedNotes: Note[] = notesData.map((note: any) => {
+          const now = new Date()
+          const editedDate = new Date(note.updated_at || note.created_at)
+          const diffMs = now.getTime() - editedDate.getTime()
+          const diffMinutes = Math.floor(diffMs / 60000)
+          let lastEdited = ''
+          if (diffMinutes < 60) {
+            lastEdited = `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`
+          } else if (diffMinutes < 1440) {
+            const diffHours = Math.floor(diffMinutes / 60)
+            lastEdited = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`
+          } else {
+            const diffDays = Math.floor(diffMinutes / 1440)
+            lastEdited = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`
+          }
+
+          return {
+            id: note.id,
+            title: note.title,
+            content: note.content,
+            category: note.note_categories?.name || 'General',
+            lastEdited,
+            author: note.members?.full_name || 'Unknown',
+            isFavorite: note.is_favorite || false,
+          }
+        })
 
         setNotes(formattedNotes)
       } catch (err) {
@@ -142,7 +163,7 @@ export default function NotesPage() {
       {/* Notes Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredNotes.map(note => (
-          <Card key={note.id} className="group hover:shadow-lg transition-shadow">
+          <Card key={note.id} className="transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0 flex items-center justify-between">
@@ -165,7 +186,7 @@ export default function NotesPage() {
                         <MoreVertical className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="w-40">
                       <DropdownMenuItem onClick={() => openEditModal(note)}>
                         <Edit className="w-4 h-4 mr-2" />
                         Edit

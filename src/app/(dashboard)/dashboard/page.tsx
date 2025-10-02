@@ -58,14 +58,30 @@ export default function DashboardPage() {
           { name: 'Hours Saved', value: '142', change: '+23%', icon: Clock },
         ])
 
-        const { data: recentNotesData } = await supabase.from('notes').select('*').eq('org_id', orgId).order('created_at', { ascending: false }).limit(5)
+        const { data: recentNotesData } = await supabase.from('notes').select('*, members:created_by(full_name)').eq('org_id', orgId).order('created_at', { ascending: false }).limit(5)
 
-        setRecentNotes(recentNotesData?.map((note: any) => ({
-          id: note.id,
-          title: note.title,
-          date: new Date(note.created_at).toLocaleString(),
-          author: note.created_by || 'Unknown',
-        })) || [])
+        setRecentNotes(recentNotesData?.map((note: any) => {
+          const createdAt = new Date(note.created_at)
+          const now = new Date()
+          const diffMs = now.getTime() - createdAt.getTime()
+          const diffMinutes = Math.floor(diffMs / 60000)
+          let relativeDate = ''
+          if (diffMinutes < 60) {
+            relativeDate = `${diffMinutes} minutes ago`
+          } else if (diffMinutes < 1440) {
+            const diffHours = Math.floor(diffMinutes / 60)
+            relativeDate = `${diffHours} hours ago`
+          } else {
+            const diffDays = Math.floor(diffMinutes / 1440)
+            relativeDate = `${diffDays} days ago`
+          }
+          return {
+            id: note.id,
+            title: note.title,
+            date: relativeDate,
+            author: note.members?.full_name || 'Unknown',
+          }
+        }) || [])
       } catch (err) {
         console.error(err)
       } finally {

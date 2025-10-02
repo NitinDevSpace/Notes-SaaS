@@ -34,9 +34,15 @@ export function SignUpForm() {
 			});
 
 			if (authError) {
-				alert(authError.message);
-				setIsLoading(false);
-				return;
+				if (authError.message && authError.message.includes("User already registered")) {
+					alert("This email is already registered. Please sign in instead.");
+					setIsLoading(false);
+					return;
+				} else {
+					alert(authError.message);
+					setIsLoading(false);
+					return;
+				}
 			}
 
 			const userId = authData.user?.id;
