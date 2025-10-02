@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type NoteModalProps = {
   isOpen: boolean
   onClose: () => void
-  onSave: (note: { title: string; content: string; category: string }) => void
+  onSave: (note: { title: string; content: string;  }) => void
   initialData?: {
     title: string
     content: string
@@ -46,7 +46,7 @@ export function NoteModal({ isOpen, onClose, onSave, initialData }: NoteModalPro
     } else {
       setTitle("")
       setContent("")
-      setCategory("General")
+     // setCategory("General")
     }
   }, [initialData, isOpen])
 
@@ -67,13 +67,13 @@ export function NoteModal({ isOpen, onClose, onSave, initialData }: NoteModalPro
         org_id: orgId,
         title,
         content,
-        category,
-        created_by: user.email
+       // category,
+        //created_by: user.email
       })
 
       if (error) throw error
 
-      onSave({ title, content, category })
+      onSave({ title, content })
       onClose()
     } catch (err: any) {
       console.error(err)
