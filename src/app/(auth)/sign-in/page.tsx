@@ -1,6 +1,7 @@
 import { SignInForm } from "@/components/auth/sign-in-form"
 import Link from "next/link"
 
+
 export default function SignInPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">

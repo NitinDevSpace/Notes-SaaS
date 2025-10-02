@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,11 +17,24 @@ export function SignInForm() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
 
-    // Redirect to dashboard (mock)
-    window.location.href = "/dashboard"
+      if (error) {
+        alert(error.message)
+      } else {
+        console.log("User signed in:", data.user)
+        // Redirect handled by parent page if needed
+      }
+    } catch (err) {
+      console.error("Sign in error:", err)
+      alert("An unexpected error occurred.")
+    }
+
+    setIsLoading(false)
   }
 
   return (
@@ -46,9 +59,7 @@ export function SignInForm() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <a href="#" className="text-sm text-primary hover:underline">
-                Forgot password?
-              </a>
+              <a href="#" className="text-sm text-primary hover:underline">Forgot password?</a>
             </div>
             <Input
               id="password"

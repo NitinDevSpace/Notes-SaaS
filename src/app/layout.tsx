@@ -5,9 +5,12 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Notely',
+  icons: {
+    icon: "/notely-logo.png"
+  },
+  description: 'A Not making multi-tenant SaaS with organization based exccess',
+  generator: 'V1',
 }
 
 export default function RootLayout({
@@ -17,10 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        {children}
-        <Analytics />
-      </body>
-    </html>
-  )
+			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+				{children}
+				<Analytics />
+			</body>
+		</html>
+	);
 }
